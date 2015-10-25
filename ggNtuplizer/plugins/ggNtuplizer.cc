@@ -1,6 +1,7 @@
 #include "ggAnalysis/ggNtuplizer/interface/ggNtuplizer.h"
 #include "ggAnalysis/ggNtuplizer/interface/GenParticleParentage.h"
 
+
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "FWCore/Utilities/interface/EDMException.h"
@@ -217,6 +218,21 @@ ggNtuplizer::ggNtuplizer(const edm::ParameterSet& ps) : verbosity_(0) {
     tree_->Branch("pdf", pdf_, "pdf[7]/F");
     tree_->Branch("pthat", &pthat_, "pthat/F");
     tree_->Branch("processID", &processID_, "processID/F");
+    // particles from hard vertex (matrix element)
+    tree_->Branch("mcHardPt" ,&mcHardPt );
+    tree_->Branch("mcHardEta",&mcHardEta);
+    tree_->Branch("mcHardPhi",&mcHardPhi);
+    tree_->Branch("mcHardM"  ,&mcHardM  );
+    tree_->Branch("mcHardPID",&mcHardPID);
+    tree_->Branch("mcHardFun",&mcHardFun);
+
+    tree_->Branch("mcHardOutP"  ,&mcHardOutP  ); 
+    tree_->Branch("mcHardOutPt" ,&mcHardOutPt );
+    tree_->Branch("mcHardOutEta",&mcHardOutEta);
+    tree_->Branch("mcHardOutPhi",&mcHardOutPhi);
+    tree_->Branch("mcHardOutE"  ,&mcHardOutE  );
+    tree_->Branch("mcHardOutPdgId",&mcHardOutPdgId);
+
     // genParticle
     tree_->Branch("nMC", &nMC_, "nMC/I");
     tree_->Branch("mcPID", &mcPID);
@@ -1222,6 +1238,20 @@ void ggNtuplizer::clearVectors() {
   mcDecayType.clear();
   mcParentage.clear();
   mcStatus.clear();
+
+  mcHardPt .clear();
+  mcHardEta.clear();
+  mcHardPhi.clear();
+  mcHardM  .clear();
+  mcHardPID.clear();
+  mcHardFun.clear();
+
+  mcHardOutPt .clear();
+  mcHardOutP.clear();
+  mcHardOutEta.clear();
+  mcHardOutPhi.clear();  
+  mcHardOutE.clear();
+  mcHardOutPdgId.clear();
   
   nPU_.clear();
   puBX_.clear();
@@ -2291,6 +2321,7 @@ void ggNtuplizer::produce(edm::Event & e, const edm::EventSetup & es) {
     }
   }
 
+
   // GenParticle
   if (!isData_ && genParticlesHandle_.isValid() ) {
     
@@ -2312,14 +2343,102 @@ void ggNtuplizer::produce(edm::Event & e, const edm::EventSetup & es) {
 	(status < 10 && abs(ip->pdgId()) == 15 );
       
       // select also Z, W, H, and top
-      bool heavyParticle =  
-	(ip->pdgId() == 23 || abs(ip->pdgId()) == 24 || ip->pdgId() == 25 || 
-	 abs(ip->pdgId()) == 6 || abs(ip->pdgId()) == 5);
+      bool VectorBoson    = abs(ip->pdgId()) == 23 || abs(ip->pdgId()) == 24;
+      bool HiggsBoson     = abs(ip->pdgId()) == 25 || abs(ip->pdgId()) == 35 || abs(ip->pdgId()) == 36 || abs(ip->pdgId())==37;
+      bool HeavyResonance = abs(ip->pdgId()) >= 23 && abs(ip->pdgId() ) <= 50; 
+      bool heavyParticle  =  HeavyResonance || abs(ip->pdgId()) == 6  || abs(ip->pdgId()) == 5;
+      bool SMHiggs        = abs( ip->pdgId() ) == 25;
+
+
+      const Candidate *p = (const Candidate*)&(*ip);
+	/*
+	if( p->status() == 3 && fabs(p->pdgId()) != 2212  ) {
+	  cout << " Found status 3 particles: " << p->pdgId() << " with status: " << p->status() << "    M =" <<p->mass() << " : pz = " << p->pz() << " : pt = " << p->pt() 
+	       << " ;  ndau = " << p->numberOfDaughters() << " ; nparents = " << p->numberOfMothers() <<  endl;
+	  for( unsigned i = 0 ; i < p->numberOfDaughters(); i++ )
+	    cout << "    --> dau: " << i << " pdg: " << p->daughter(i)->pdgId() << " - status: " <<  p->daughter(i)->status() << " pz = " << p->daughter(i)->pz() << " : pt = " << p->daughter(i)->pt()  << endl;
+	  for( unsigned i = 0 ; i < p->numberOfMothers(); i++ )
+	    cout << "    --> mot: " << i << " pdg: " << p->mother(i)->pdgId() << " - status: " <<  p->mother(i)->status() << " pz = " << p->mother(i)->pz() << " : pt = " << p->mother(i)->pt() << endl;
+
+	  
+	  for( unsigned id = 0 ; id < p->numberOfDaughters(); id++ ) {
+	    
+	  }
+
+	}
+	*/
+
       
-      if ( stableFinalStateParticle || heavyParticle || photonOrLepton ) {
-	const Candidate *p = (const Candidate*)&(*ip);
-	if (!runOnParticleGun_ && !p->mother()) continue;
+      if( SMHiggs ) {
+	//cout << " higgs pt = " << p->pt() << " n(moms) = " << p->numberOfMothers() << endl; 
 	
+	size_t nmoms = 0;
+       	for( unsigned im = 0 ; im < p->numberOfMothers(); im++ ) {
+	   
+	  if( abs(p->mother(im)->pdgId()) == 25 ) break;
+	  nmoms++; 
+	  // cout << "   higgs mom[" << im << "] "<< " id = " << p->mother(im)->pdgId() << endl;	  
+	  for( unsigned id = 0 ; id < p->mother(im)->numberOfDaughters(); id++ ) {
+	    if( abs(p->mother(im)->daughter(id)->pdgId()) == 25 || nmoms > 1 ) continue;
+	    
+	    mcHardOutPt .push_back( p->mother(im)->daughter(id)->pt() );
+	    mcHardOutP .push_back( p->mother(im)->daughter(id)->p() );
+	    mcHardOutEta.push_back( p->mother(im)->daughter(id)->eta() );
+	    mcHardOutPhi.push_back( p->mother(im)->daughter(id)->phi() );
+	    mcHardOutE  .push_back( p->mother(im)->daughter(id)->energy() ); 
+	    mcHardOutPdgId.push_back( p->mother(im)->daughter(id)->pdgId() );  
+	    // cout << "     parton dau[" << id << "] "<< " id = " << p->mother(im)->daughter(id)->pdgId() <<  " pt = " << p->mother(im)->daughter(id)->pt() << endl;
+	  }
+	 
+	}
+      }
+
+     if ( stableFinalStateParticle || heavyParticle || photonOrLepton ) {
+
+	if (!runOnParticleGun_ && !p->mother()) continue;
+	if( HeavyResonance  && !VectorBoson && p->status() == 3 && mcHardPID.size() == 0 ) {
+	  /// info from the hard vertex  (status=3), i.e. Matrix element
+	  // store incoming parton
+	  for( unsigned i = 0 ; i < p->numberOfMothers(); i++ ) {
+	    mcHardPt .push_back( p->mother(i)->pt()   );
+	    mcHardEta.push_back( p->mother(i)->eta()  );
+	    mcHardPhi.push_back( p->mother(i)->phi()  );
+	    mcHardM  .push_back( p->mother(i)->mass() );
+	    mcHardPID.push_back( p->mother(i)->pdgId());
+	    mcHardFun.push_back( -1 );
+	  }
+	  // store the main resonance HR
+	  mcHardPt .push_back( p->pt()    );
+	  mcHardEta.push_back( p->eta()   );
+	  mcHardPhi.push_back( p->phi()   );
+	  mcHardM  .push_back( p->mass()  );
+	  mcHardPID.push_back( p->pdgId() );
+	  mcHardFun.push_back( 0 );
+	  // store the daughters of HR
+	  for( unsigned i = 0 ; i < p->numberOfDaughters(); i++ )
+	    if( p->daughter(i)->pdgId() != p->pdgId() ) {
+            mcHardPt .push_back( p->daughter(i)->pt()   );
+            mcHardEta.push_back( p->daughter(i)->eta()  );
+	    mcHardPhi.push_back( p->daughter(i)->phi()  );
+            mcHardM  .push_back( p->daughter(i)->mass() );
+	    mcHardPID.push_back( p->daughter(i)->pdgId());
+            mcHardFun.push_back( +1 );
+          }
+	  
+	  /*
+	  cout << " Found particle " << p->pdgId() << " with status: " << p->status() << " M=" <<p->mass() << ")" 
+	       << " ;  ndau = " << p->numberOfDaughters() << " ; nparents = " << p->numberOfMothers() <<  endl;
+	  for( unsigned i = 0 ; i < p->numberOfMothers(); i++ ) 
+	    cout << "     - parent: " << i << " is: ID = " 
+		 << p->mother(i)->pdgId() << " pz = " << p->mother(i)->pz() << " pt = " 
+		 << p->mother(i)->pt() << " mass = " << p->mother(i)->mass() <<  endl;
+	  
+	  cout << "  vs id0 = " << pdf_[0] << " pz = " << pdf_[2]*(+4000) << endl;
+	  cout << "  vs id1 = " << pdf_[1] << " pz = " << pdf_[3]*(-4000) << endl;
+	  cout << "    --> pthat = " << pthat_ << endl;
+	  */
+	}
+
 	reco::GenParticleRef partRef = reco::GenParticleRef(genParticlesHandle_,
 							    ip-genParticlesHandle_->begin());
 	genpartparentage::GenParticleParentage particleHistory(partRef);

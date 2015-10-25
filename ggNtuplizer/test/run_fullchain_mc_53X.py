@@ -14,20 +14,42 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('Configuration.StandardSequences.Reconstruction_cff')
 
 process.maxEvents = cms.untracked.PSet(
-        input = cms.untracked.int32(100)
+        input = cms.untracked.int32(1000)
             )
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(
-    'file:/uscms/home/makouski/nobackup/TTJets_SemiLeptMGDecays_8TeV-madgraph.root'
-    #'file:/data4/cmkuo/testfiles/GluGluToHToGG_M-126_8TeV-powheg-pythia6_PU_RD1_START53_V7N-v1_02D0B20F-23D2-E211-8C14-0026189438A9.root'
-#    'file:/data4/cmkuo/testfiles/hzg_jjg_VBFH_125.root'
-    ),
+        #'root://xrootd.ba.infn.it//store/mc/Summer12_DR53X/JJHiggs0PToGG_M-125p6_8TeV-JHUGenV4-pythia6-tauola/AODSIM/PU_RD1_START53_V7N-v1/00000/021391E4-6803-E411-BE5E-002590A7A2E0.root',
+        'root://xrootd.ba.infn.it//store/mc/Summer12_DR53X/VBFHiggs0PToGG_M-125p6_8TeV-JHUGenV4-pythia6-tauola/AODSIM/PU_RD1_START53_V7N-v3/00000/0A2798DF-7D16-E411-96B9-0025901D4AFE.root',
+        'root://xrootd.ba.infn.it//store/mc/Summer12_DR53X/VBFHiggs0PToGG_M-125p6_8TeV-JHUGenV4-pythia6-tauola/AODSIM/PU_RD1_START53_V7N-v3/00000/0A787126-0D16-E411-A425-003048CF6336.root'
+        #'root://xrootd.ba.infn.it//store/mc/Summer11LegDR/VBFHiggs0PToGG_M-125p6_7TeV-JHUGenV4-pythia6-tauola/AODSIM/PU_S13_START53_LV6-v1/00000/06BBC13C-4001-E411-8D9F-002590AC4BF6.root',
+        #'root://xrootd.ba.infn.it//store/mc/Summer11LegDR/VBFHiggs0PToGG_M-125p6_7TeV-JHUGenV4-pythia6-tauola/AODSIM/PU_S13_START53_LV6-v1/00000/0EABEA2D-4701-E411-8BF8-00266CF2D5C4.root',
+        #'root://xrootd.ba.infn.it//store/mc/Summer11LegDR/VBFHiggs0PToGG_M-125p6_7TeV-JHUGenV4-pythia6-tauola/AODSIM/PU_S13_START53_LV6-v1/00000/107122FC-3C01-E411-993B-0025901D4C3C.root',
+        #'root://xrootd.ba.infn.it//store/mc/Summer11LegDR/VBFHiggs0PToGG_M-125p6_7TeV-JHUGenV4-pythia6-tauola/AODSIM/PU_S13_START53_LV6-v1/00000/1211AEC2-4301-E411-9174-0025907DC9BE.root'
+        #'root://stormgf2.pi.infn.it:1094//store/mc/Summer11LegDR/VBFHiggs0PToGG_M-125p6_7TeV-JHUGenV4-pythia6-tauola/AODSIM/PU_S13_START53_LV6-v1/00000/06BBC13C-4001-E411-8D9F-002590AC4BF6.root'
+        #'file:/data4/cmkuo/testfiles/GluGluToHToGG_M-126_8TeV-powheg-pythia6_PU_RD1_START53_V7N-v1_02D0B20F-23D2-E211-8C14-0026189438A9.root'
+        #    'file:/data4/cmkuo/testfiles/hzg_jjg_VBFH_125.root'
+        ),
                             noEventSort = cms.untracked.bool(True),
                             duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
                             )
 
 process.load("PhysicsTools.PatAlgos.patSequences_cff")
+process.patJets.discriminatorSources = cms.VInputTag(
+    cms.InputTag("combinedSecondaryVertexBJetTags"),
+    cms.InputTag("combinedSecondaryVertexMVABJetTags"),
+    cms.InputTag("jetBProbabilityBJetTags"),
+    cms.InputTag("jetProbabilityBJetTags"),
+    cms.InputTag("simpleSecondaryVertexHighEffBJetTags"),
+    cms.InputTag("simpleSecondaryVertexHighPurBJetTags"),
+    #cms.InputTag("softPFElectronBJetTags"),
+   #cms.InputTag("softElectronByIP3dBJetTags"),
+    #cms.InputTag("softPFMuonBJetTags"),
+    #cms.InputTag("softMuonByPtBJetTags"),
+    #cms.InputTag("softMuonByIP3dBJetTags"),
+    cms.InputTag("trackCountingHighEffBJetTags"),
+    cms.InputTag("trackCountingHighPurBJetTags"),
+)
 
 # Trigger matching
 process.load("ggAnalysis.ggNtuplizer.ggPatTriggerMatching_cff")

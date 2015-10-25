@@ -11,14 +11,14 @@ patJetsCA8CHSpruned.embedGenJetMatch = cms.bool(False)
 patJetsCA8CHSpruned.embedGenPartonMatch = cms.bool(False)
 PATCMGJetSequenceCA8CHS = cms.Sequence(
     ca8PFJetsCHS +
-#    jetMCSequenceCA8CHS +
+##    jetMCSequenceCA8CHS +
     patJetCorrFactorsCA8CHS +
     patJetsCA8CHS +
     selectedPatJetsCA8CHS
     )
 PATCMGJetSequenceCA8CHSpruned = cms.Sequence(
     ca8PFJetsCHSpruned +
-#    jetMCSequenceCA8CHSpruned +
+##    jetMCSequenceCA8CHSpruned +
     patJetCorrFactorsCA8CHSpruned +
     patJetsCA8CHSpruned +
     selectedPatJetsCA8CHSpruned

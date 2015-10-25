@@ -288,6 +288,21 @@ protected:
   Int_t    IsTracksGood_;
   Float_t  centrality_[5];
   // genParticle
+  /// in reactions  p1 p2 -> HR -> d1 d2 ... store the hard vertex
+  vector<int> mcHardFun;  /// -1: incoming parton; 0: HR; +1: decay product of HR
+  vector<int> mcHardPID;
+  vector<float> mcHardPt;
+  vector<float> mcHardEta;
+  vector<float> mcHardPhi;
+  vector<float> mcHardM;
+
+  vector<float> mcHardOutPt;
+  vector<float> mcHardOutP;  
+  vector<float> mcHardOutEta;
+  vector<float> mcHardOutPhi;
+  vector<float> mcHardOutE;
+  vector<float> mcHardOutPdgId;
+
   Int_t    nMC_;
   vector<int> mcPID;
   vector<float> mcVtx_x;
